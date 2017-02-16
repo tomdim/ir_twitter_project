@@ -1,0 +1,360 @@
+# -*- coding: cp1253 -*-
+
+##еККГМИЙЭ аМОИВТЭ пАМЕПИСТчЛИО - пЯЭЦЯАЛЛА сПОУДЧМ пКГЯОЖОЯИЙчР
+##пТУВИАЙч еЯЦАСъА: HOU-CS-UGP-2013-18
+##"аКЦЭЯИХЛОИ аПОДОТИЙчР еПИКОЦчР вАЯАЙТГЯИСТИЙЧМ ЦИА йАТГЦОЯИОПОъГСГ йЕИЛщМОУ СТГМ еККГМИЙч цКЧССА"
+##аКщНАМДЯОР йАКАПЭДГР
+##еПИБКщПЫМ йАХГЦГТчР: сПЩЯОР кУЙОХАМэСГР, тЛчЛА лГВАМИЙЧМ г/у & пКГЯОЖОЯИЙчР, пАМЕПИСТчЛИО пэТЯАР
+
+##Implementation in Python of the greek stemmer presented by Giorgios Ntais during his master thesis with title
+##"Development of a Stemmer for the Greek Language" in the Department of Computer and Systems Sciences
+##at Stockholm's University / Royal Institute of Technology.
+
+##The system takes as input a word and removes its inflexional suffix according to a rule based algorithm.
+##The algorithm follows the known Porter algorithm for the English language and it is developed according to the
+##grammatical rules of the Modern Greek language.
+
+VOWELS = [u'а', u'е', u'г', u'и', u'о', u'у', u'ы', u'╒', u'╦', u'╧', u'╨', u'╪', u'╬', u'©', u'з', u'ш']
+
+def ends_with(word, suffix):
+    return word[len(word) - len(suffix):] == suffix
+
+def stem(word):
+    initial = word
+    done = len(word) <= 3
+    
+    ##rule-set  1
+    ##циациадес->циац, оладес->олад
+    if not done:
+        for suffix in [u'иадес', u'адес', u'адым']:
+            if ends_with(word, suffix):
+                word = word[:len(word) - len(suffix)]
+                remaining_part_does_not_end_on = True
+                for s in [u'ой', u'лал', u'лам', u'лпалп', u'патея', u'циац', u'мтамт', u'йуя', u'хеи', u'пехея']:
+                    if ends_with(word, s):
+                        remaining_part_does_not_end_on = False
+                        break
+                if remaining_part_does_not_end_on:
+                    word = word + u'ад'
+                done = True
+                break
+
+    ##rule-set  2
+    ##йажедес->йаж, цгпедым->цгпед
+    if not done:
+        for suffix in [u'едес', u'едым']:
+            if ends_with(word, suffix):
+                word = word[:len(word) - len(suffix)]
+                for s in [u'оп', u'ип', u'елп', u'уп', u'цгп', u'дап', u'йяасп', u'лик']:
+                    if ends_with(word, s):
+                        word = word + u'ед'
+                        break
+                done = True
+                break
+
+    ##rule-set  3
+    ##паппоудым->папп, аяйоудес->аяйоуд
+    if not done:
+        for suffix in [u'оудес', u'оудым']:
+            if ends_with(word, suffix):
+                word = word[:len(word) - len(suffix)]
+                for s in [u'аяй', u'йакиай', u'петак', u'кив', u'пкен', u'сй', u'с', u'жк', u'жя', u'бек', u'коук', u'вм', u'сп', u'тяац', u'же']:
+                    if ends_with(word, s):
+                        word = word + u'оуд'
+                        break
+                done = True
+                break
+
+    ##rule-set  4
+    ##упохесеыс->упохес, хеым->хе
+    if not done:
+        for suffix in [u'еыс', u'еым']:
+            if ends_with(word, suffix):
+                word = word[:len(word) - len(suffix)]
+                for s in [u'х', u'д', u'ек', u'цак', u'м', u'п', u'ид', u'пая']:
+                    if ends_with(word, s):
+                        word = word + u'е'
+                        break
+                done = True
+                break
+
+    ##rule-set  5
+    ##паидиа->паид, текеиоу->текеи
+    if not done:
+        for suffix in [u'иа', u'иоу', u'иым']:
+            if ends_with(word, suffix):
+                word = word[:len(word) - len(suffix)]
+                for s in VOWELS:
+                    if ends_with(word, s):
+                        word = word + u'и'
+                        break
+                done = True
+                break
+
+    ##rule-set  6
+    ##фгкиаяийо->фгкиая, ацяоийос->ацяоий
+    if not done:
+        for suffix in [u'ийа', u'ийоу', u'ийым', u'ийос', u'ийо', u'ийг']:
+            if ends_with(word, suffix):
+                word = word[:len(word) - len(suffix)]
+                if word in [u'ак', u'ад', u'емд', u'алам', u'алловак', u'гх', u'амгх', u'амтид', u'жус', u'бяыл', u'цея', u'еныд', u'йакп',
+                            u'йакким', u'йатад', u'лоук', u'лпам', u'лпациат', u'лпок', u'лпос', u'мит', u'ний', u'сумолгк', u'петс', u'питс',
+                            u'пийамт', u'пкиатс', u'помт', u'постекм', u'пяытод', u'сеят', u'сумад', u'тсал', u'упод', u'жиком', u'жукод',
+                            u'вас']:
+                    word = word + u'ий'
+                else:
+                    for s in VOWELS:
+                        if ends_with(word, s):
+                            word = word + u'ий'
+                            break
+                done = True
+                break
+
+    ##rule-set  7
+    ##ацапацале->ацап, амапале->амапал
+    if not done:
+        if word == u'ацале': word = 2*word
+        for suffix in [u'гхгйале', u'ацале', u'гсале', u'оусале', u'гйале']:
+            if ends_with(word, suffix):
+                word = word[:len(word) - len(suffix)]
+                if word in [u'ж']:
+                    word = word + u'ацал'
+                done = True
+                break
+        if not done and ends_with(word, u'але'):
+            word = word[:len(word) - len(u'але')]
+            if word in [u'амап', u'апох', u'апой', u'апост', u'боуб', u'нех', u'оук', u'пех', u'пийя', u'пот', u'сив', u'в']:
+                word = word + u'ал'
+            done = True
+
+    ##rule-set  8
+    ##ацапгсале->ацап, тяацаме->тяацам
+    if not done:
+        for suffix in [u'иоумтаме', u'иомтаме', u'оумтаме', u'гхгйаме', u'оусаме', u'иотаме', u'омтаме', u'ацаме', u'гсаме',
+                       u'отаме', u'гйаме']:
+            if ends_with(word, suffix):
+                word = word[:len(word) - len(suffix)]
+                if word in [u'тя', u'тс', u'ж']:
+                    word = word + u'ацам'
+                done = True
+                break
+        if not done and ends_with(word, u'аме'):
+            word = word[:len(word) - len(u'але')]
+            if word in [u'бетея', u'боукй', u'бяавл', u'ц', u'дяадоул', u'х', u'йакпоуф', u'йастек', u'йоялоя', u'каопк', u'лыалех', u'л',
+                        u'лоусоукл', u'м', u'оук', u'п', u'пекей', u'пк', u'покис', u'пояток', u'саяайатс', u'соукт', u'тсаякат', u'ояж',
+                        u'тсицц', u'тсоп', u'жытостеж', u'в', u'ьувопк', u'ац', u'ояж', u'цак', u'цея', u'дей', u'дипк', u'алеяийам', u'оуя',
+                        u'пих', u'поуяит', u'с', u'фымт', u'ий', u'йаст', u'йоп', u'кив', u'коухгя', u'лаимт', u'лек', u'сиц', u'сп', u'стец',
+                        u'тяац', u'тсац', u'ж', u'ея', u'адап', u'ахицц', u'алгв', u'амий', u'амояц', u'апгц', u'апих', u'атсицц', u'бас',
+                        u'басй', u'бахуцак', u'биолгв', u'бяавуй', u'диат', u'диаж', u'емояц', u'хус', u'йапмобиолгв', u'йатацак', u'йкиб',
+                        u'йоикаяж', u'киб', u'лецкобиолгв', u'лийяобиолгв', u'мтаб', u'нгяойкиб', u'окицодал', u'окоцак', u'пемтаяж',
+                        u'пеягж', u'пеяитя', u'пкат', u'покудап', u'покулгв', u'стеж', u'таб', u'тет', u'упеягж', u'упойоп', u'валгкодап',
+                        u'ьгкотаб']:
+                word = word + u'ам'
+            else:
+                for s in VOWELS:
+                    if ends_with(word, s):
+                        word = word + u'ам'
+                        break
+            done = True
+
+    ##rule-set  9
+    ##ацапгсете->ацап, бемете->бемет
+    if not done:
+        if ends_with(word, u'гсете'):
+            word = word[:len(word) - len(u'гсете')]
+            done = True
+        elif ends_with(word, u'ете'):
+            word = word[:len(word) - len(u'ете')]
+            if word in [u'абая', u'бем', u'емая', u'абя', u'ад', u'ах', u'ам', u'апк', u'баяом', u'мтя', u'сй', u'йоп', u'лпоя', u'миж', u'пац',
+                        u'паяайак', u'сеяп', u'сйек', u'суяж', u'той', u'у', u'д', u'ел', u'хаяя', u'х']:
+                word = word + u'ет'
+            else:
+                for s in [u'од', u'аия', u'жоя', u'тах', u'диах', u'св', u'емд', u'еуя', u'тих', u'упеях', u'яах', u'емх', u'яох', u'сх', u'пуя',
+                          u'аим', u'сумд', u'сум', u'сумх', u'выя', u'пом', u'бя', u'йах', u'еух', u'ейх', u'мет', u'яом', u'аяй', u'бая', u'бок',
+                          u'ыжек'] + VOWELS:
+                    if ends_with(word, s):
+                        word = word + u'ет'
+                        break
+            done = True
+
+    ##rule-set 10
+    ##ацапымтас->ацап, неможымтас->неможым
+    if not done:
+        for suffix in [u'омтас', u'ымтас']:
+            if ends_with(word, suffix):
+                word = word[:len(word) - len(suffix)]
+                if word in [u'аяв']:
+                    word = word + u'омт'
+                elif word in [u'немож', u'йяе']:
+                    word = word + u'ымт'
+                done = True
+                break
+
+    ##rule-set 11
+    ##ацапиоласте->ацап, омоласте->омоласт
+    if not done:
+        for suffix in [u'иоласте', u'оласте']:
+            if ends_with(word, suffix):
+                word = word[:len(word) - len(suffix)]
+                if word in [u'ом']:
+                    word = word + u'оласт'
+                done = True
+                break
+
+    ##rule-set 12
+    ##ацапиесте->ацап, пиесте->пиест
+    if not done:
+        for suffix in [u'иесте']:
+            if ends_with(word, suffix):
+                word = word[:len(word) - len(suffix)]
+                if word in [u'п', u'ап', u'сулп', u'асулп', u'йатап', u'леталж']:
+                    word = word + u'иест'
+                done = True
+                break
+    if not done:
+        for suffix in [u'есте']:
+            if ends_with(word, suffix):
+                word = word[:len(word) - len(suffix)]
+                if word in [u'ак', u'ая', u'ейтек', u'ф', u'л', u'н', u'паяайак', u'ая', u'пяо', u'мис']:
+                    word = word + u'ест'
+                done = True
+                break
+
+    ##rule-set 13
+    ##втистгйе->втист, диахгйес->диахгй
+    if not done:
+        for suffix in [u'гхгйа', u'гхгйес', u'гхгйе']:
+            if ends_with(word, suffix):
+                word = word[:len(word) - len(suffix)]
+                done = True
+                break
+    if not done:
+        for suffix in [u'гйа', u'гйес', u'гйе']:
+            if ends_with(word, suffix):
+                word = word[:len(word) - len(suffix)]
+                if word in [u'диах', u'х', u'паяайатах', u'пяосх', u'сумх']:
+                    word = word + u'гй'
+                else:
+                    for suffix in [u'сйык', u'сйоук', u'маях', u'сж', u'ох', u'пих']:
+                        if ends_with(word, suffix):
+                            word = word + u'гй'
+                            break
+                done = True
+                break
+            
+    ##rule-set 14
+    ##втупоусес->втуп, ледоусес->ледоус
+    if not done:
+        for suffix in [u'оуса', u'оусес', u'оусе']:
+            if ends_with(word, suffix):
+                word = word[:len(word) - len(suffix)]
+                if word in [u'жаялай', u'вад', u'ацй', u'амаяя', u'бяол', u'ейкип', u'калпид', u'кев', u'л', u'пат', u'я', u'к', u'лед', u'лесаф',
+                            u'употеим', u'ал', u'аих', u'амгй', u'деспоф', u'емдиажея', u'де', u'деутеяеу', u'йахаяеу', u'пке', u'тса']:
+                    word = word + u'оус'
+                else:
+                    for s in [u'подая', u'бкеп', u'памтав', u'жяуд', u'ламтик', u'лакк', u'йулат', u'кав', u'кгц', u'жац', u'ол', u'пяыт'] + VOWELS:
+                        if ends_with(word, s):
+                            word = word + u'оус'
+                            break
+                done = True
+                break
+
+    ##rule-set 15
+    #йоккацес->йокк, абастаца->абаст
+    if not done:
+        for suffix in [u'аца', u'ацес', u'аце']:
+            if ends_with(word, suffix):
+                word = word[:len(word) - len(suffix)]
+                if word in [u'абаст', u'покуж', u'адгж', u'палж', u'я', u'асп', u'аж', u'алак', u'алакки', u'амуст', u'апея', u'аспая', u'авая',
+                            u'деябем', u'дяосоп', u'неж', u'меоп', u'молот', u'окоп', u'олот', u'пяост', u'пяосыпоп', u'сулп', u'сумт', u'т',
+                            u'упот', u'вая', u'аеип', u'аилост', u'амуп', u'апот', u'аятип', u'диат', u'ем', u'епит', u'йяойакоп', u'сидгяоп',
+                            u'к', u'мау', u'оукал', u'оуя', u'п', u'тя', u'л']:
+                    word = word + u'ац'
+                else:
+                    for s in [u'ож', u'пек', u'воят', u'сж', u'яп', u'жя', u'пя', u'ков', u'слгм']:
+                        # ажаияехгйе: 'кк'
+                        if ends_with(word, s):
+                            if not word in [u'ьож', u'мауков']:
+                                word = word + u'ац'
+                            break
+                done = True
+                break
+
+    ##rule-set 16
+    ##ацапгсе->ацап, мгсоу->мгс
+    if not done:
+        for suffix in [u'гсе', u'гсоу', u'гса']:
+            if ends_with(word, suffix):
+                word = word[:len(word) - len(suffix)]
+                if word in [u'м', u'веясом', u'дыдейам', u'еяглом', u'лецаком', u'ептам', u'ацахом']:
+                    word = word + u'гс'
+                done = True
+                break
+            
+    ##rule-set 17
+    ##ацапгсте->ацап, сбгсте->сбгст
+    if not done:
+        for suffix in [u'гсте']:
+            if ends_with(word, suffix):
+                word = word[:len(word) - len(suffix)]
+                if word in [u'асб', u'сб', u'авя', u'вя', u'апк', u'аеилм', u'дусвя', u'еувя', u'йоимовя', u'пакиль']:
+                    word = word + u'гст'
+                done = True
+                break
+            
+    ##rule-set 18
+    ##ацапоуме->ацап, спиоуме->спиоум
+    if not done:
+        for suffix in [u'оуме', u'гсоуме', u'гхоуме']:
+            if ends_with(word, suffix):
+                word = word[:len(word) - len(suffix)]
+                if word in [u'м', u'я', u'спи', u'стяаболоутс', u'йайолоутс', u'еным']:
+                    word = word + u'OYN'
+                done = True
+                break
+            
+    ##rule-set 19
+    ##ацапоуле->ацап, жоуле->жоул
+    if not done:
+        for suffix in [u'оуле', u'гсоуле', u'гхоуле']:
+            if ends_with(word, suffix):
+                word = word[:len(word) - len(suffix)]
+                if word in [u'паяасоус', u'ж', u'в', u'ыяиопк', u'аф', u'аккосоус', u'асоус']:
+                    word = word + u'оул'
+                done = True
+                break
+            
+    ##rule-set 20
+    ##йулата->йул, выяато->выяат
+    if not done:
+        for suffix in [u'лата', u'латым', u'латос']:
+            if ends_with(word, suffix):
+                word = word[:len(word) - len(suffix)]
+                word = word + u'л'
+                done = True
+                break
+            
+    ##rule-set 21
+    if not done:
+        for suffix in [u'иомтоусам', u'иоуласте', u'иоластам', u'иосастам', u'омтоусам', u'иосасте', u'иеласте', u'иесасте', u'иолоума',
+                       u'иосоума', u'иоумтаи', u'иоумтам', u'гхгйате', u'оластам', u'осастам', u'оуласте', u'иолоум', u'иомтам', u'иосоум',
+                       u'гхеите', u'гхгйам', u'олоума', u'осасте', u'осоума', u'оумтаи', u'оумтам', u'оусате', u'ацате', u'еитаи', u'иелаи',
+                       u'иетаи', u'иесаи', u'иотам', u'иоула', u'гхеис', u'гхоум', u'гйате', u'гсате', u'гсоум', u'олоум', u'омтаи',
+                       u'омтам', u'осоум', u'оулаи', u'оусам', u'ацам', u'алаи', u'асаи', u'атаи', u'еите', u'есаи', u'етаи', u'гдес',
+                       u'гдым', u'гхеи', u'гйам', u'гсам', u'гсеи', u'гсес', u'олаи', u'отам', u'аеи', u'еис', u'гхы', u'гсы', u'оум',
+                       u'оус', u'ам', u'ас', u'аы', u'еи', u'ес', u'гс', u'ои', u'ом', u'ос', u'оу', u'ус', u'ым', u'ыс', u'а', u'е', u'и', u'г',
+                       u'о', u'у', u'ы']:
+            if ends_with(word, suffix):
+                word = word[:len(word) - len(suffix)]
+                break
+
+    ##rule-set 22
+    ##пкгсиестатос->пкуси, лецакутеяг->лецак, йомтотеяо->йомт
+    if not done:
+        for suffix in [u'естея', u'естат', u'отея', u'отат', u'утея', u'утат', u'ытея', u'ытат']:
+            if ends_with(word, suffix):
+                word = word[:len(word) - len(suffix)]
+                break
+
+    return word
+
